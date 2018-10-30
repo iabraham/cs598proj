@@ -1,0 +1,8 @@
+data/VOC2012/train*/*.jpg
+data/VOC2012/val/*.jpg
+training_results/*
+!training_results/.gitkeep
+__py*
+images/*.png
+*.pyc
+epochs/*.pth
