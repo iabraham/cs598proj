@@ -25,14 +25,12 @@ def train_hr_transform(crop_size):
 
 def train_lr_transform(crop_size, upscale_factor):
     possible_interpolations = [Image.NEAREST, Image.BILINEAR, Image.BICUBIC, Image.LANCZOS]
-    print("FOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
-    breakpoint()
-    print("Chosen interpolation = {}".format(possible_interpolations[chosen_interpolation]))
+    chosen = random.choice(possible_interpolations)
     return Compose([
         ToPILImage(),
-        Resize(crop_size // upscale_factor, interpolation=random.choice(possible_interpolations)),
+        Resize(crop_size // upscale_factor, interpolation=chosen),
         ToTensor()
-    ])
+    ]), chosen
 
 
 def display_transform():
@@ -51,10 +49,14 @@ class TrainDatasetFromFolder(Dataset):
         crop_size = calculate_valid_crop_size(crop_size, upscale_factor)
         self.hr_transform = train_hr_transform(crop_size)
         self.lr_transform = train_lr_transform(crop_size, upscale_factor)
+        self.crop_size = crop_size
+        self.upscale_factor = upscale_factor  
 
     def __getitem__(self, index):
         hr_image = self.hr_transform(Image.open(self.image_filenames[index]))
-        lr_image = self.lr_transform(hr_image)
+        transformer, choice = train_lr_transform(self.crop_size, self.upscale_factor)
+        #print(choice)
+        lr_image = transformer(hr_image)
         return lr_image, hr_image
 
     def __len__(self):
