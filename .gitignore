@@ -6,3 +6,4 @@ __py*
 images/*.png
 *.pyc
 epochs/*.pth
+pytorch-yolo-v3-master/imgs
