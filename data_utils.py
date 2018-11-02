@@ -94,6 +94,7 @@ class TestDatasetFromFolder(Dataset):
         self.hr_filenames = [join(self.hr_path, x) for x in listdir(self.hr_path) if is_image_file(x)]
 
     def __getitem__(self, index):
+        breakpoint()
         image_name = self.lr_filenames[index].split('/')[-1]
         lr_image = Image.open(self.lr_filenames[index])
         w, h = lr_image.size

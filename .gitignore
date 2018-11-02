@@ -7,3 +7,4 @@ images/*.png
 *.pyc
 epochs/*.pth
 pytorch-yolo-v3-master/imgs
+pytorch-yolo-v3-master/*.weights
