@@ -5,6 +5,8 @@ from PIL import Image
 from torch.utils.data.dataset import Dataset
 from torchvision.transforms import Compose, RandomCrop, ToTensor, ToPILImage, CenterCrop, Resize
 
+import random
+
 
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG'])
@@ -22,9 +24,13 @@ def train_hr_transform(crop_size):
 
 
 def train_lr_transform(crop_size, upscale_factor):
+    possible_interpolations = [Image.NEAREST, Image.BILINEAR, Image.BICUBIC, Image.LANCZOS]
+    print("FOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+    breakpoint()
+    print("Chosen interpolation = {}".format(possible_interpolations[chosen_interpolation]))
     return Compose([
         ToPILImage(),
-        Resize(crop_size // upscale_factor, interpolation=Image.BICUBIC),
+        Resize(crop_size // upscale_factor, interpolation=random.choice(possible_interpolations)),
         ToTensor()
     ])
 
