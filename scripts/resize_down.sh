@@ -7,7 +7,7 @@ filter=$2
 
 #This is the no filter case
 #Filter defaults to Lanczos/Mitchell, so will need to artifically add the "None" filter
-if [ -z "$filter" || "$filter" == "none" ]
+if [[ -z "$filter" || "$filter" == "none" ]]
 then
     convert -resize 500X333 -filter point $1 out_$1
 fi
