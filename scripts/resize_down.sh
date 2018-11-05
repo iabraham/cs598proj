@@ -20,7 +20,7 @@ declare -A array1=(
 #If there is a filter check that it is valid
 if [[ -n "${array1[$filter]}" ]]
 then
-    convert -resize 500X333 -filter $filter $image out_$image
+    convert -resize 125X -filter $filter $image out_$image
 else
     echo "[ERROR!] Make sure filter is one of the following\n [catrom, triangle, lanczos, or none]"
 fi
