@@ -5,22 +5,20 @@
 image=$1
 filter=$2
 
+#Get width and divide by 4
+width=$(identify -format "%w" "$1")> /dev/null
+width=$((width/4))
+width+="X"
+
 #This is the no filter case
 #Filter defaults to Lanczos/Mitchell, so will need to artifically add the "None" filter
 if [[ -z "$filter" || "$filter" == "none" ]]
 then
-    convert -resize 500X333 -filter point $1 out_$1
+    echo "No filter given, using 'point' as default"
+    convert -resize $width -filter point $1 out_$1
+
+else
+    #Filter types given here:https://imagemagick.org/script/command-line-options.php#filter
+    convert -resize $width -filter $filter $image out_$image
 fi
 
-#Filter types given here:https://imagemagick.org/script/command-line-options.php#filter
-declare -A array1=( 
- [catrom]=1  [triangle]=1 [lanczos]=1
-)
- 
-#If there is a filter check that it is valid
-if [[ -n "${array1[$filter]}" ]]
-then
-    convert -resize 125X -filter $filter $image out_$image
-else
-    echo "[ERROR!] Make sure filter is one of the following\n [catrom, triangle, lanczos, or none]"
-fi
