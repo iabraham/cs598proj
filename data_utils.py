@@ -16,11 +16,11 @@ def calculate_valid_crop_size(crop_size, upscale_factor):
     return crop_size - (crop_size % upscale_factor)
 
 
-def train_hr_transform(crop_size):
-    return Compose([
-        RandomCrop(crop_size),
-        ToTensor(),
-    ])
+#def train_hr_transform(crop_size):
+#    return Compose([
+#        RandomCrop(crop_size),
+#        ToTensor(),
+#    ])
 
 
 def train_lr_transform(crop_size, upscale_factor):
@@ -47,7 +47,8 @@ class TrainDatasetFromFolder(Dataset):
         super(TrainDatasetFromFolder, self).__init__()
         self.image_filenames = [join(dataset_dir, x) for x in listdir(dataset_dir) if is_image_file(x)]
         crop_size = calculate_valid_crop_size(crop_size, upscale_factor)
-        self.hr_transform = train_hr_transform(crop_size)
+#        breakpoint()
+#        self.hr_transform = train_hr_transform(crop_size)
         self.lr_transform = train_lr_transform(crop_size, upscale_factor)
         self.crop_size = crop_size
         self.upscale_factor = upscale_factor  
@@ -94,7 +95,6 @@ class TestDatasetFromFolder(Dataset):
         self.hr_filenames = [join(self.hr_path, x) for x in listdir(self.hr_path) if is_image_file(x)]
 
     def __getitem__(self, index):
-        breakpoint()
         image_name = self.lr_filenames[index].split('/')[-1]
         lr_image = Image.open(self.lr_filenames[index])
         w, h = lr_image.size
