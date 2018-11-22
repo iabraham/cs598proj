@@ -3,9 +3,9 @@ from torch import nn
 from torchvision.models.vgg import vgg16
 
 
-class GeneratorLoss(nn.Module):
+class GenLoss(nn.Module):
     def __init__(self):
-        super(GeneratorLoss, self).__init__()
+        super(GenLoss, self).__init__()
         vgg = vgg16(pretrained=True)
         loss_network = nn.Sequential(*list(vgg.features)[:31]).eval()
         for param in loss_network.parameters():
@@ -47,5 +47,5 @@ class TVLoss(nn.Module):
 
 
 if __name__ == "__main__":
-    g_loss = GeneratorLoss()
+    g_loss = GenLoss()
     print(g_loss)

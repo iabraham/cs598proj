@@ -1,47 +1,44 @@
 import math
 
-import torch.nn.functional as F
+import torch
 from torch import nn
 
 
 class Generator(nn.Module):
     def __init__(self, scale_factor):
-        upsample_block_num = int(math.log(scale_factor, 2))
+        up_blk_num = int(math.log(scale_factor, 2))
 
         super(Generator, self).__init__()
-        self.block1 = nn.Sequential(
+        self.blk1 = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=9, padding=4),
             nn.PReLU()
         )
-        self.block2 = ResidualBlock(64)
-        self.block3 = ResidualBlock(64)
-        self.block4 = ResidualBlock(64)
-        self.block5 = ResidualBlock(64)
-        self.block6 = ResidualBlock(64)
-        self.block7 = nn.Sequential(
-            nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.PReLU()
-        )
-        block8 = [UpsampleBLock(64, 2) for _ in range(upsample_block_num)]
-        block8.append(nn.Conv2d(64, 3, kernel_size=9, padding=4))
-        self.block8 = nn.Sequential(*block8)
+        self.blk2 = ResBlk(64)
+        self.blk3 = ResBlk(64)
+        self.blk4 = ResBlk(64)
+        self.blk5 = ResBlk(64)
+        self.blk6 = ResBlk(64)
+        self.blk7 = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, padding=1), nn.PReLU())
+        blk8 = [UpBlk(64, 2) for _ in range(up_blk_num)]
+        blk8.append(nn.Conv2d(64, 3, kernel_size=9, padding=4))
+        self.blk8 = nn.Sequential(*blk8)
 
     def forward(self, x):
-        block1 = self.block1(x)
-        block2 = self.block2(block1)
-        block3 = self.block3(block2)
-        block4 = self.block4(block3)
-        block5 = self.block5(block4)
-        block6 = self.block6(block5)
-        block7 = self.block7(block6)
-        block8 = self.block8(block1 + block7)
+        blk1 = self.blk1(x)
+        blk2 = self.blk2(blk1)
+        blk3 = self.blk3(blk2)
+        blk4 = self.blk4(blk3)
+        blk5 = self.blk5(blk4)
+        blk6 = self.blk6(blk5)
+        blk7 = self.blk7(blk6)
+        blk8 = self.blk8(blk1 + blk7)
 
-        return (F.tanh(block8) + 1) / 2
+        return (torch.tanh(blk8) + 1) / 2
 
 
-class Discriminator(nn.Module):
+class Discrim(nn.Module):
     def __init__(self):
-        super(Discriminator, self).__init__()
+        super(Discrim, self).__init__()
         self.net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, padding=1),
             nn.LeakyReLU(0.2),
@@ -81,13 +78,13 @@ class Discriminator(nn.Module):
         )
 
     def forward(self, x):
-        batch_size = x.size(0)
-        return F.sigmoid(self.net(x).view(batch_size))
+        b_size = x.size(0)
+        return torch.sigmoid(self.net(x).view(b_size))
 
 
-class ResidualBlock(nn.Module):
+class ResBlk(nn.Module):
     def __init__(self, channels):
-        super(ResidualBlock, self).__init__()
+        super(ResBlk, self).__init__()
         self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
         self.bn1 = nn.BatchNorm2d(channels)
         self.prelu = nn.PReLU()
@@ -95,18 +92,18 @@ class ResidualBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(channels)
 
     def forward(self, x):
-        residual = self.conv1(x)
-        residual = self.bn1(residual)
-        residual = self.prelu(residual)
-        residual = self.conv2(residual)
-        residual = self.bn2(residual)
+        res = self.conv1(x)
+        res = self.bn1(res)
+        res = self.prelu(res)
+        res = self.conv2(res)
+        res = self.bn2(res)
 
-        return x + residual
+        return x + res
 
 
-class UpsampleBLock(nn.Module):
+class UpBlk(nn.Module):
     def __init__(self, in_channels, up_scale):
-        super(UpsampleBLock, self).__init__()
+        super(UpBlk, self).__init__()
         self.conv = nn.Conv2d(in_channels, in_channels * up_scale ** 2, kernel_size=3, padding=1)
         self.pixel_shuffle = nn.PixelShuffle(up_scale)
         self.prelu = nn.PReLU()
