@@ -70,16 +70,16 @@ class TestFromFolder(Dataset):
         self.hr_path = dataset_dir + '/SRF_' + str(upscale_factor) + '/target/'
         self.upscale_factor = upscale_factor
         self.lr_files = [join(self.lr_path, x) for x in listdir(self.lr_path) if is_image(x)]
-        self.hr_files = [join(self.hr_path, x) for x in listdir(self.hr_path) if is_image(x)]
+        # self.hr_files = [join(self.hr_path, x) for x in listdir(self.hr_path) if is_image(x)]
 
     def __getitem__(self, index):
         image_name = self.lr_files[index].split('/')[-1]
         lr_image = Image.open(self.lr_files[index])
         w, h = lr_image.size
-        hr_image = Image.open(self.hr_files[index])
+        # hr_image = Image.open(self.hr_files[index])
         hr_scale = Resize((self.upscale_factor * h, self.upscale_factor * w), interpolation=Image.BICUBIC)
         hr_restore_img = hr_scale(lr_image)
-        return image_name, ToTensor()(lr_image), ToTensor()(hr_restore_img), ToTensor()(hr_image)
+        return image_name, ToTensor()(lr_image), ToTensor()(hr_restore_img)
 
     def __len__(self):
         return len(self.lr_files)
