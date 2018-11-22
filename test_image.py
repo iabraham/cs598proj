@@ -1,7 +1,4 @@
-import argparse
-import time
-
-import torch
+import argparse, time, torch
 from PIL import Image
 from torch.autograd import Variable
 from torchvision.transforms import ToTensor, ToPILImage
@@ -15,13 +12,12 @@ parser.add_argument('--image_name', type=str, help='test low resolution image na
 parser.add_argument('--model_name', default='netG_epoch_4_100.pth', type=str, help='generator model epoch name')
 opt = parser.parse_args()
 
-UPSCALE_FACTOR = opt.upscale_factor
-TEST_MODE = True if opt.test_mode == 'GPU' else False
-IMAGE_NAME = opt.image_name
-MODEL_NAME = opt.model_name
+U_FACTOR = opt.upscale_factor
+MODE = True if opt.test_mode == 'GPU' else False
+IMAGE_NAME, MODEL_NAME = opt.image_name,  opt.model_name
 
-model = Generator(UPSCALE_FACTOR).eval()
-if TEST_MODE:
+model = Generator(U_FACTOR).eval()
+if MODE:
     model.cuda()
     model.load_state_dict(torch.load('epochs/' + MODEL_NAME))
 else:
@@ -29,7 +25,8 @@ else:
 
 image = Image.open(IMAGE_NAME)
 image = Variable(ToTensor()(image), volatile=True).unsqueeze(0)
-if TEST_MODE:
+
+if MODE:
     image = image.cuda()
 
 start = time.clock()
@@ -37,4 +34,4 @@ out = model(image)
 elapsed = (time.clock() - start)
 print('cost' + str(elapsed) + 's')
 out_img = ToPILImage()(out[0].data.cpu())
-out_img.save('out_srf_' + str(UPSCALE_FACTOR) + '_' + IMAGE_NAME)
+out_img.save('out_srf_' + str(U_FACTOR) + '_' + IMAGE_NAME)

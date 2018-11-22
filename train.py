@@ -23,35 +23,31 @@ parser.add_argument('--num_epochs', default=100, type=int, help='train epoch num
 
 opt = parser.parse_args()
 
-CROP_SIZE, UPSCALE_FACTOR, NUM_EPOCHS = opt.crop_size, opt.upscale_factor, opt.num_epochs
+C_SIZE, U_FACTOR, N_EPOCHS = opt.crop_size, opt.upscale_factor, opt.num_epochs
 
-train_set = TrainFromFolder('data/VOC2012/train', crop_size=CROP_SIZE, upscale_factor=UPSCALE_FACTOR)
-val_set = ValidateFromFolder('data/VOC2012/val', upscale_factor=UPSCALE_FACTOR)
-train_loader = DataLoader(dataset=train_set, num_workers=4, batch_size=64, shuffle=True)
-val_loader = DataLoader(dataset=val_set, num_workers=4, batch_size=1, shuffle=False)
+training_set = TrainFromFolder('data/VOC2012/train', crop_size=C_SIZE, upscale_factor=U_FACTOR)
+validation_set = ValidateFromFolder('data/VOC2012/val', upscale_factor=U_FACTOR)
+training_loader = DataLoader(dataset=training_set, num_workers=4, batch_size=64, shuffle=True)
+validation_loader = DataLoader(dataset=validation_set, num_workers=4, batch_size=1, shuffle=False)
 
-netG, netD, gen_crit = Generator(UPSCALE_FACTOR), Discrim(), GenLoss()
-
-print('# generator parameters:', sum(param.numel() for param in netG.parameters()))
-print('# discriminator parameters:', sum(param.numel() for param in netD.parameters()))
+netG, netD, gen_crit = Generator(U_FACTOR), Discrim(), GenLoss()
 
 if torch.cuda.is_available():
     netG.cuda()
     netD.cuda()
     gen_crit.cuda()
 
-optG = optimizers.Adam(netG.parameters())
-optD = optimizers.Adam(netD.parameters())
+optG, optD = optimizers.Adam(netG.parameters()), optimizers.Adam(netD.parameters())
 
 results = {'d_loss': [], 'g_loss': [], 'd_score': [], 'g_score': [], 'psnr': [], 'ssim': []}
 
-for epoch in range(1, NUM_EPOCHS + 1):
-    train_bar = tqdm(train_loader)
+for epoch in range(1, N_EPOCHS + 1):
+    training_bar = tqdm(training_loader)
     running_results = {'batch_sizes': 0, 'd_loss': 0, 'g_loss': 0, 'd_score': 0, 'g_score': 0}
 
     netG.train()
     netD.train()
-    for data, target in train_bar:
+    for data, target in training_bar:
         g_update_first = True
         b_size = data.size(0)
         running_results['batch_sizes'] += b_size
@@ -68,8 +64,7 @@ for epoch in range(1, NUM_EPOCHS + 1):
         fake_img = netG(z)
 
         netD.zero_grad()
-        real_out = netD(real_img).mean()
-        fake_out = netD(fake_img).mean()
+        real_out, fake_out = netD(real_img).mean(), netD(fake_img).mean()
         d_loss = 1 - real_out + fake_out
         d_loss.backward(retain_graph=True)
         optD.step()
@@ -81,27 +76,25 @@ for epoch in range(1, NUM_EPOCHS + 1):
         g_loss = gen_crit(fake_out, fake_img, real_img)
         g_loss.backward()
         optG.step()
-        fake_img = netG(z)
-        fake_out = netD(fake_img).mean()
+        fake_img, fake_out = netG(z), netD(fake_img).mean()
 
-        g_loss = gen_crit(fake_out, fake_img, real_img)
+        g_loss, d_loss = gen_crit(fake_out, fake_img, real_img), 1 - real_out + fake_out
         running_results['g_loss'] += g_loss.item() * b_size
-        d_loss = 1 - real_out + fake_out
         running_results['d_loss'] += d_loss.item() * b_size
         running_results['d_score'] += real_out.item() * b_size
         running_results['g_score'] += fake_out.item() * b_size
 
-        train_bar.set_description(desc='[%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f' % (
-            epoch, NUM_EPOCHS, running_results['d_loss'] / running_results['batch_sizes'],
+        training_bar.set_description(desc='[%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f' % (
+            epoch, N_EPOCHS, running_results['d_loss'] / running_results['batch_sizes'],
             running_results['g_loss'] / running_results['batch_sizes'],
             running_results['d_score'] / running_results['batch_sizes'],
             running_results['g_score'] / running_results['batch_sizes']))
 
     netG.eval()
-    out_path = 'training_results/SRF_' + str(UPSCALE_FACTOR) + '/'
+    out_path = 'training_results/SRF_' + str(U_FACTOR) + '/'
     if not os.path.exists(out_path):
         os.makedirs(out_path)
-    validation_bar = tqdm(val_loader)
+    validation_bar = tqdm(validation_loader)
     validation_results = {'mse': 0, 'ssims': 0, 'psnr': 0, 'ssim': 0, 'batch_sizes': 0}
     validation_images = []
     for val_lr, val_hr_restore, val_hr in validation_bar:
@@ -136,8 +129,8 @@ for epoch in range(1, NUM_EPOCHS + 1):
         index += 1
 
     # save model parameters
-    torch.save(netG.state_dict(), 'epochs/netG_epoch_%d_%d.pth' % (UPSCALE_FACTOR, epoch))
-    torch.save(netD.state_dict(), 'epochs/netD_epoch_%d_%d.pth' % (UPSCALE_FACTOR, epoch))
+    torch.save(netG.state_dict(), 'epochs/netG_epoch_%d_%d.pth' % (U_FACTOR, epoch))
+    torch.save(netD.state_dict(), 'epochs/netD_epoch_%d_%d.pth' % (U_FACTOR, epoch))
     # save loss\scores\psnr\ssim
     results['d_loss'].append(running_results['d_loss'] / running_results['batch_sizes'])
     results['g_loss'].append(running_results['g_loss'] / running_results['batch_sizes'])
@@ -152,4 +145,4 @@ for epoch in range(1, NUM_EPOCHS + 1):
             data={'Loss_D': results['d_loss'], 'Loss_G': results['g_loss'], 'Score_D': results['d_score'],
                   'Score_G': results['g_score'], 'PSNR': results['psnr'], 'SSIM': results['ssim']},
             index=range(1, epoch + 1))
-        data_frame.to_csv(out_path + 'srf_' + str(UPSCALE_FACTOR) + '_train_results.csv', index_label='Epoch')
+        data_frame.to_csv(out_path + 'srf_' + str(U_FACTOR) + '_train_results.csv', index_label='Epoch')

@@ -17,9 +17,9 @@ conda install tqdm
 conda install opencv
 ```
 
-### Test Benchmark Datasets
+### Test Many Images
 ```
-python test_benchmark.py
+python test_many.py
 
 optional arguments:
 --upscale_factor              super resolution upscale factor [default value is 4]
