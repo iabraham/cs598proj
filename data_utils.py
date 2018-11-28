@@ -6,7 +6,6 @@ from torchvision.transforms import Compose, RandomCrop, ToTensor, ToPILImage, Ce
 
 import random
 
-Image.ADAPTIVE
 
 def display():
     return Compose([ToPILImage(), Resize(400), CenterCrop(400), ToTensor()])
