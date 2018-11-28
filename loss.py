@@ -1,12 +1,12 @@
 import torch
 from torch import nn
-from torchvision.models.vgg import vgg16
+from torchvision.models.vgg import vgg19
 
 
 class GenLoss(nn.Module):
     def __init__(self):
         super(GenLoss, self).__init__()
-        vgg = vgg16(pretrained=True)
+        vgg = vgg19(pretrained=True)
         loss_network = nn.Sequential(*list(vgg.features)[:31]).eval()
         for param in loss_network.parameters():
             param.requires_grad = False

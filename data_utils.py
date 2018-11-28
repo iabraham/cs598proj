@@ -6,6 +6,7 @@ from torchvision.transforms import Compose, RandomCrop, ToTensor, ToPILImage, Ce
 
 import random
 
+Image.ADAPTIVE
 
 def display():
     return Compose([ToPILImage(), Resize(400), CenterCrop(400), ToTensor()])
@@ -16,9 +17,9 @@ def train_hr(crop_size):
 
 
 def train_lr(crop_size, upscale_factor):
-    possible_interpolations = [Image.NEAREST, Image.BILINEAR, Image.BICUBIC, Image.LANCZOS]
+    possible_interpolations = [Image.BICUBIC, Image.LANCZOS, Image.HAMMING]
     chosen = random.choice(possible_interpolations)
-    return Compose([ToPILImage(), Resize(crop_size // upscale_factor, interpolation=chosen), ToTensor()]), chosen
+    return Compose([ToPILImage(), Resize(crop_size // upscale_factor, interpolation=chosen), ToTensor()])
 
 
 class TrainFromFolder(Dataset):
@@ -33,7 +34,7 @@ class TrainFromFolder(Dataset):
 
     def __getitem__(self, index):
         hr_image = self.hr_transform(Image.open(self.image_files[index]))
-        transformer, choice = train_lr(self.crop_size, self.upscale_factor)
+        transformer = train_lr(self.crop_size, self.upscale_factor)
         lr_image = transformer(hr_image)
         return lr_image, hr_image
 
