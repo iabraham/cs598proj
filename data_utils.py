@@ -7,6 +7,9 @@ from torchvision.transforms import Compose, RandomCrop, ToTensor, ToPILImage, Ce
 import random
 
 
+possible_interpolations = [Image.BICUBIC, Image.LANCZOS, Image.HAMMING]
+
+
 def display():
     return Compose([ToPILImage(), Resize(400), CenterCrop(400), ToTensor()])
 
@@ -16,7 +19,6 @@ def train_hr(crop_size):
 
 
 def train_lr(crop_size, upscale_factor):
-    possible_interpolations = [Image.BICUBIC, Image.LANCZOS, Image.HAMMING]
     chosen = random.choice(possible_interpolations)
     return Compose([ToPILImage(), Resize(crop_size // upscale_factor, interpolation=chosen), ToTensor()])
 
@@ -51,7 +53,7 @@ class ValidateFromFolder(Dataset):
         hr_image = Image.open(self.image_files[index])
         w, h = hr_image.size
         crop_size = valid_crop_size(min(w, h), self.upscale_factor)
-        lr_scale = Resize(crop_size // self.upscale_factor, interpolation=Image.BICUBIC)
+        lr_scale = Resize(crop_size // self.upscale_factor, interpolation=random.choice(possible_interpolations))
         hr_scale = Resize(crop_size, interpolation=Image.BICUBIC)
         hr_image = CenterCrop(crop_size)(hr_image)
         lr_image = lr_scale(hr_image)
