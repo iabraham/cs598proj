@@ -1,6 +1,5 @@
 from os import listdir
 from os.path import join
-
 from PIL import Image
 from torch.utils.data.dataset import Dataset
 from torchvision.transforms import Compose, RandomCrop, ToTensor, ToPILImage, CenterCrop, Resize
@@ -23,9 +22,9 @@ def train_lr(crop_size, upscale_factor):
 
 
 class TrainFromFolder(Dataset):
-    def __init__(self, dataset_dir, crop_size, upscale_factor):
+    def __init__(self, folder, crop_size, upscale_factor):
         super(TrainFromFolder, self).__init__()
-        self.image_files = [join(dataset_dir, x) for x in listdir(dataset_dir) if is_image(x)]
+        self.image_files = [join(folder, x) for x in listdir(folder) if is_image(x)]
         crop_size = valid_crop_size(crop_size, upscale_factor)
         self.hr_transform = train_hr(crop_size)
         self.lr_transform = train_lr(crop_size, upscale_factor)
@@ -43,10 +42,10 @@ class TrainFromFolder(Dataset):
 
 
 class ValidateFromFolder(Dataset):
-    def __init__(self, dataset_dir, upscale_factor):
+    def __init__(self, folder, upscale_factor):
         super(ValidateFromFolder, self).__init__()
         self.upscale_factor = upscale_factor
-        self.image_files = [join(dataset_dir, x) for x in listdir(dataset_dir) if is_image(x)]
+        self.image_files = [join(folder, x) for x in listdir(folder) if is_image(x)]
 
     def __getitem__(self, index):
         hr_image = Image.open(self.image_files[index])
@@ -64,19 +63,17 @@ class ValidateFromFolder(Dataset):
 
 
 class TestFromFolder(Dataset):
-    def __init__(self, dataset_dir, upscale_factor):
+    def __init__(self, folder, upscale_factor):
         super(TestFromFolder, self).__init__()
-        self.lr_path = dataset_dir + '/SRF_' + str(upscale_factor) + '/data/'
-        self.hr_path = dataset_dir + '/SRF_' + str(upscale_factor) + '/target/'
+        self.lr_path = folder + '/SRF_' + str(upscale_factor) + '/data/'
+        self.hr_path = folder + '/SRF_' + str(upscale_factor) + '/target/'
         self.upscale_factor = upscale_factor
         self.lr_files = [join(self.lr_path, x) for x in listdir(self.lr_path) if is_image(x)]
-        # self.hr_files = [join(self.hr_path, x) for x in listdir(self.hr_path) if is_image(x)]
 
     def __getitem__(self, index):
         image_name = self.lr_files[index].split('/')[-1]
         lr_image = Image.open(self.lr_files[index])
         w, h = lr_image.size
-        # hr_image = Image.open(self.hr_files[index])
         hr_scale = Resize((self.upscale_factor * h, self.upscale_factor * w), interpolation=Image.BICUBIC)
         hr_restore_img = hr_scale(lr_image)
         return image_name, ToTensor()(lr_image), ToTensor()(hr_restore_img)

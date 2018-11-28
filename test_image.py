@@ -17,6 +17,7 @@ MODE = True if opt.test_mode == 'GPU' else False
 IMAGE_NAME, MODEL_NAME = opt.image_name,  opt.model_name
 
 model = Generator(U_FACTOR).eval()
+
 if MODE:
     model.cuda()
     model.load_state_dict(torch.load('epochs/' + MODEL_NAME))
