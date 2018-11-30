@@ -10,23 +10,29 @@ class Generator(nn.Module):
 
         super(Generator, self).__init__()
         self.blk1 = nn.Sequential(nn.Conv2d(3, 64, kernel_size=9, padding=4), nn.PReLU())
-        self.blk26 = [ResBlk(64) for k in range(5)]
+        blk26 = [ResBlk(64) for k in range(5)]
+        self.blk26 = nn.Sequential(*blk26)
         self.blk7 = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, padding=1), nn.PReLU())
         blk8 = [UpBlk(64, 2) for _ in range(up_blk_num)]
         blk8.append(nn.Conv2d(64, 3, kernel_size=9, padding=4))
         self.blk8 = nn.Sequential(*blk8)
 
+
     def forward(self, x):
         blk1 = self.blk1(x)
-        blk26 = list()
-        blk26.append(self.blk26[0](blk1))
-        for k in range(1, 5):
-            blk26.append(self.blk26[k](blk26[k-1]))
-        blk7 = self.blk7(blk26[-1])
+    # blk26 = list()
+    # blk26.append(self.blk26[0](blk1))
+    # for k in range(1, 5):
+    #     blk26.append(self.blk26[k](blk26[k-1]))
+        blk26 = self.blk26(blk1)
+     #   blk3 = self.blk26[1](blk2)
+     #   blk4 = self.blk26[2](blk3)
+     #   blk5 = self.blk26[3](blk4)
+     #   blk6 = self.blk26[4](blk5)
+        blk7 = self.blk7(blk26)
         blk8 = self.blk8(blk1 + blk7)
 
         return (torch.tanh(blk8) + 1) / 2
-
 
 class Discrim(nn.Module):
     def __init__(self):
@@ -38,7 +44,14 @@ class Discrim(nn.Module):
         self.net = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, padding=1),
             nn.LeakyReLU(0.2),
-            *type321(64),  *type31(64), *type321(128), *type31(128), *type321(256), *type31(256), *type321(512),
+            *type321(64),
+            *type31(64),
+            *type321(128), 
+            *type31(128),
+            *type321(256),
+            *type31(256),
+            *type321(512),
+
             nn.AdaptiveAvgPool2d(1),
             nn.Conv2d(512, 1024, kernel_size=1),
             nn.LeakyReLU(0.2),

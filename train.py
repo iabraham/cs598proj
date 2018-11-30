@@ -129,8 +129,8 @@ for epoch in range(1, N_EPOCHS + 1):
         index += 1
 
     # save model parameters
-    torch.save(netG.state_dict(), 'epochs/netG_epoch_%d_%d.pth' % (U_FACTOR, epoch))
-    torch.save(netD.state_dict(), 'epochs/netD_epoch_%d_%d.pth' % (U_FACTOR, epoch))
+    torch.save(netG.state_dict(), 'epochs/netG_epoch_%d_%d_tom.pth' % (U_FACTOR, epoch))
+    torch.save(netD.state_dict(), 'epochs/netD_epoch_%d_%d_tom.pth' % (U_FACTOR, epoch))
     # save loss\scores\psnr\ssim
     results['d_loss'].append(running_results['d_loss'] / running_results['batch_sizes'])
     results['g_loss'].append(running_results['g_loss'] / running_results['batch_sizes'])
@@ -145,4 +145,4 @@ for epoch in range(1, N_EPOCHS + 1):
             data={'Loss_D': results['d_loss'], 'Loss_G': results['g_loss'], 'Score_D': results['d_score'],
                   'Score_G': results['g_score'], 'PSNR': results['psnr'], 'SSIM': results['ssim']},
             index=range(1, epoch + 1))
-        data_frame.to_csv(out_path + 'srf_' + str(U_FACTOR) + '_train_results.csv', index_label='Epoch')
+        data_frame.to_csv(out_path + 'srf_' + str(U_FACTOR) + '_train_results_tom.csv', index_label='Epoch')
