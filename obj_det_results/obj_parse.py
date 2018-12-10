@@ -23,10 +23,12 @@ def parse_text(file_name):
 file1 = "000annotations.txt"
 file2 = "object_out_all_blurs_multiblur_NN.txt"
 file3 = "object_out_all_blurs_nonmultiblur_NN.txt"
+file4 = "object_out_all_blurs_tom_NN.txt"
 
 original = parse_text(file1)
 multiblur = parse_text(file2)
 nonmultiblur = parse_text(file3)
+tom = parse_text(file4)
 
 
 
@@ -39,11 +41,11 @@ for type in types:
     for key in original.keys():
         originally_found= set(original[key])
         try:
-            newly_found = set(nonmultiblur[type+key])
+            newly_found = set(tom[type+key])
             diff = originally_found.difference(newly_found)
         except KeyError:
             diff = originally_found
-            print(diff)
+            #print(diff)
         n_misses[type] += len(diff)
 
 print(n_misses)
